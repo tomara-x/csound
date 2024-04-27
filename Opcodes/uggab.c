@@ -91,12 +91,13 @@ static int32_t kmirror(CSOUND *csound, WRAP *p)
 
     if (xlow >= xhigh) *p->xdest = (xlow + xhigh)*FL(0.5);
     else {
-      while ((xsig > xhigh) || (xsig < xlow)) {
-        if (xsig > xhigh)
-          xsig = xhigh + xhigh - xsig;
-        else
-          xsig = xlow + xlow - xsig;
-      }
+      MYFLT dist = xsig > xhigh ? xsig - xhigh : xlow - xsig;
+      MYFLT range = xhigh - xlow;
+      uint32_t folds = dist / range;
+      if ((xsig > xhigh && folds & 1 == 0) || (xsig < xlow && folds & 1 != 0))
+        xsig = xlow + (dist - folds * range);
+      else
+        xsig = xhigh + (dist - folds * range);
       *p->xdest = xsig;
     }
     return OK;
@@ -131,12 +132,13 @@ static int32_t mirror(CSOUND *csound, WRAP *p)
 
     for (n=offset;n<nsmps;n++) {
       xsig = asig[n];
-      while ((xsig > xhigh) || ( xsig < xlow )) {
-        if (xsig > xhigh)
-          xsig = xhigh + xhigh - xsig;
-        else
-          xsig = xlow + xlow - xsig;
-      }
+      MYFLT dist = xsig > xhigh ? xsig - xhigh : xlow - xsig;
+      MYFLT range = xhigh - xlow;
+      uint32_t folds = dist / range;
+      if ((xsig > xhigh && folds & 1 == 0) || (xsig < xlow && folds & 1 != 0))
+        xsig = xlow + (dist - folds * range);
+      else
+        xsig = xhigh + (dist - folds * range);
       adest[n] = xsig;
     }
     return OK;
